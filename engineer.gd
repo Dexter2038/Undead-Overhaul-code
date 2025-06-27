@@ -1,14 +1,14 @@
 extends CharacterBody2D
-class_name Player
+#class_name Player
 
 
 @export var sprite_2d: Sprite2D
 @export var animation_player: AnimationPlayer
-@export var inventory: CanvasLayer
+@export var inv: Inventory
 
-@export var SPEED = 300.0
-@export var JUMP_VELOCITY = -400.0
-@export var PUSH_FORCE = 80.0
+@export var SPEED := 300.0
+@export var JUMP_VELOCITY := -400.0
+@export var PUSH_FORCE := 80.0
 
 enum Dir {
 	Left,
@@ -22,8 +22,9 @@ enum State {
 	Fall
 }
 
-var dir: Dir = Dir.Right
-var state: State = State.Idle
+var dir := Dir.Right
+var state := State.Idle
+var pick: Array[Pickable] = []
 
 
 func set_dir(new_dir: Dir) -> void:
@@ -53,8 +54,19 @@ func set_state(new_state: State) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if Input.is_action_just_pressed("ui_pick"):
+		var length := len(self.pick)
+		if length:
+			var pickable_item: Pickable = self.pick[0]
+			var item: InvItem = pickable_item.item
+			var count = pickable_item.count
+			inv.add_item(item, count)
+			pickable_item.queue_free()
+			self.pick.pop_front()
+			if length > 1:
+				self.pick[0].enable_glow()
 	if Input.is_action_just_pressed("ui_inv"):
-		inventory.visible = !inventory.visible
+		inv.visible = !inv.visible
 	# Handle jump.
 	if Input.is_action_just_pressed("ui_accept") and is_on_floor():
 		velocity.y = JUMP_VELOCITY
