@@ -7,7 +7,10 @@ use godot::{
     prelude::*,
 };
 
-use crate::pickable::Pickable;
+use crate::{
+    inventory::{inv::Inventory, ui::inv::InventoryUI},
+    pickable::Pickable,
+};
 
 #[derive(Clone, Copy, PartialEq)]
 enum State {
@@ -45,6 +48,12 @@ pub struct Player {
     #[export]
     anim_player: Option<Gd<AnimationPlayer>>,
 
+    #[export]
+    inventory: Option<Gd<Inventory>>,
+
+    #[export]
+    inventory_ui: Option<Gd<InventoryUI>>,
+
     pub pick_items: Array<Gd<Pickable>>,
 
     #[init(val=State::Idle)]
@@ -63,11 +72,17 @@ impl ICharacterBody2D for Player {
         if self.anim_player.is_none() {
             panic!("AnimationPlayer node not found");
         };
+        if self.inventory.is_none() {
+            panic!("Inventory node not found");
+        };
+        if self.inventory_ui.is_none() {
+            panic!("InventoryUI node not found");
+        };
     }
 
-    fn input(&mut self, input: Gd<InputEvent>) {
-        self.pick_item(&input);
-        self.inv_toggle(&input);
+    fn input(&mut self, _input: Gd<InputEvent>) {
+        self.pick_item();
+        self.inv_toggle();
     }
 
     fn physics_process(&mut self, delta: f32) {
@@ -104,25 +119,51 @@ impl Player {
             .expect("anim_player must be initialized in _ready()")
     }
 
-    fn pick_item(&mut self, input: &Gd<InputEvent>) {
-        if input.is_action_pressed("ui_pick") {
+    fn pick_item(&mut self) {
+        if Input::singleton().is_action_just_pressed("ui_pick") {
             let len = self.pick_items.len();
             if len == 0 {
                 return;
             }
-            let Some(pickable_item) = self.pick_items.pop_front() else {
+            let Some(pickable_item) = self.pick_items.front() else {
                 return;
             };
             let pickable_item = pickable_item.bind();
             let item = pickable_item.item();
             let quantity = pickable_item.quantity;
-            todo!("Pick up item")
+            let Some(inventory) = self.inventory.as_mut() else {
+                return;
+            };
+            let mut inventory = inventory.bind_mut();
+            let result = inventory.add_item(item, quantity);
+            if result.is_ok() {
+                if let Some(mut pickable_item) = self.pick_items.pop_front() {
+                    pickable_item.queue_free();
+                }
+                if let Some(mut pickable_item) = self.pick_items.front() {
+                    let mut pickable_item = pickable_item.bind_mut();
+                    pickable_item.enable_glow();
+                }
+                return;
+            }
+            let Some(mut pickable_item) = self.pick_items.front() else {
+                return;
+            };
+            let mut pickable_item = pickable_item.bind_mut();
+            if let Err(quantity) = result {
+                pickable_item.quantity = quantity;
+            };
         }
     }
 
-    fn inv_toggle(&mut self, input: &Gd<InputEvent>) {
-        if input.is_action_pressed("ui_inv") {
-            todo!("Open inventory")
+    fn inv_toggle(&mut self) {
+        if Input::singleton().is_action_just_pressed("ui_inv") {
+            let Some(inventory_ui) = self.inventory_ui.as_mut() else {
+                return;
+            };
+            let mut inventory_ui = inventory_ui.bind_mut();
+            let is_visible = inventory_ui.base().is_visible();
+            inventory_ui.base_mut().set_visible(!is_visible);
         }
     }
 
