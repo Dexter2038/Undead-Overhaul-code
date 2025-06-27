@@ -58,26 +58,36 @@ impl IRigidBody2D for Pickable {
 impl Pickable {
     #[allow(dead_code)]
     pub fn sprite(&self) -> &Gd<Sprite2D> {
-        self.sprite.as_ref().unwrap()
+        self.sprite
+            .as_ref()
+            .expect("sprite must be initialized in _ready()")
     }
 
     #[allow(dead_code)]
     pub fn sprite_mut(&mut self) -> &mut Gd<Sprite2D> {
-        self.sprite.as_mut().unwrap()
+        self.sprite
+            .as_mut()
+            .expect("sprite must be initialized in _ready()")
     }
 
     #[allow(dead_code)]
     pub fn area(&self) -> &Gd<Area2D> {
-        self.area.as_ref().unwrap()
+        self.area
+            .as_ref()
+            .expect("area must be initialized in _ready()")
     }
 
     #[allow(dead_code)]
     pub fn area_mut(&mut self) -> &mut Gd<Area2D> {
-        self.area.as_mut().unwrap()
+        self.area
+            .as_mut()
+            .expect("area must be initialized in _ready()")
     }
 
     pub fn item(&self) -> &Gd<InventoryItem> {
-        self.item.as_ref().unwrap()
+        self.item
+            .as_ref()
+            .expect("item must be initialized in _ready()")
     }
 
     pub fn get_shader_material(&mut self) -> Option<Gd<ShaderMaterial>> {
@@ -89,21 +99,15 @@ impl Pickable {
     }
 
     pub fn enable_glow(&mut self) {
-        let material = self.get_shader_material();
-        if material.is_none() {
-            return;
+        if let Some(mut material) = self.get_shader_material() {
+            material.set_shader_parameter("enable_glow", &Variant::from(true));
         }
-        let mut material = material.unwrap();
-        material.set_shader_parameter("enable_glow", &Variant::from(true));
     }
 
     pub fn disable_glow(&mut self) {
-        let material = self.get_shader_material();
-        if material.is_none() {
-            return;
+        if let Some(mut material) = self.get_shader_material() {
+            material.set_shader_parameter("enable_glow", &Variant::from(false));
         }
-        let mut material = material.unwrap();
-        material.set_shader_parameter("enable_glow", &Variant::from(false));
     }
 
     fn on_body_entered(&mut self, body: Gd<Node2D>) {

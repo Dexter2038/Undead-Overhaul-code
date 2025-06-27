@@ -78,21 +78,30 @@ impl ICharacterBody2D for Player {
 impl Player {
     #[allow(dead_code)]
     fn sprite(&self) -> &Gd<Sprite2D> {
-        self.sprite.as_ref().unwrap()
+        self.sprite
+            .as_ref()
+            .expect("sprite must be initialized in _ready()")
     }
 
     #[allow(dead_code)]
     fn sprite_mut(&mut self) -> &mut Gd<Sprite2D> {
-        self.sprite.as_mut().unwrap()
+        self.sprite
+            .as_mut()
+            .expect("sprite must be initialized in _ready()")
     }
 
     #[allow(dead_code)]
     fn anim_player(&self) -> &Gd<AnimationPlayer> {
-        self.anim_player.as_ref().unwrap()
+        self.anim_player
+            .as_ref()
+            .expect("anim_player must be initialized in _ready()")
     }
 
+    #[allow(dead_code)]
     fn anim_player_mut(&mut self) -> &mut Gd<AnimationPlayer> {
-        self.anim_player.as_mut().unwrap()
+        self.anim_player
+            .as_mut()
+            .expect("anim_player must be initialized in _ready()")
     }
 
     fn pick_item(&mut self, input: &Gd<InputEvent>) {
@@ -101,8 +110,9 @@ impl Player {
             if len == 0 {
                 return;
             }
-            // Unwrap cannot fail
-            let pickable_item = self.pick_items.pop_front().unwrap();
+            let Some(pickable_item) = self.pick_items.pop_front() else {
+                return;
+            };
             let pickable_item = pickable_item.bind();
             let item = pickable_item.item();
             let quantity = pickable_item.quantity;
@@ -145,7 +155,6 @@ impl Player {
             }
         }
         if !self.base().is_on_floor() {
-            //velocity += self.base().get_gravity() * self.base().get_physics_process_delta_time()
             let gravity = self.base().get_gravity();
             let gravity = Vector2::new(gravity.x * delta, gravity.y * delta);
             velocity += gravity
@@ -157,11 +166,9 @@ impl Player {
             let c = self.base_mut().get_slide_collision(i);
             match c {
                 Some(c) => {
-                    let col = c.get_collider();
-                    if col.is_none() {
+                    let Some(col) = c.get_collider() else {
                         continue;
-                    }
-                    let col = col.unwrap();
+                    };
                     if !col.is_class("RigidBody2D") {
                         continue;
                     }

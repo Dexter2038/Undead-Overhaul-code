@@ -7,6 +7,6 @@ use crate::inventory::item::InventoryItem;
 #[class(init, base=Resource)]
 pub struct InventorySlot {
     base: Base<Resource>,
-    pub item: Option<InventoryItem>,
+    pub item: Option<Gd<InventoryItem>>,
     pub quantity: u32,
 }
