@@ -1,5 +1,11 @@
 use godot::prelude::*;
 
+use crate::player::Player;
+
+mod pickable;
+mod player;
+mod resources;
+
 #[derive(GodotClass)]
 #[class(base=Node)]
 struct Generator {
@@ -21,3 +27,4 @@ impl INode for Generator {
 
 #[gdextension]
 unsafe impl ExtensionLibrary for Generator {}
+unsafe impl ExtensionLibrary for Player {}
