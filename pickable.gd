@@ -1,5 +1,5 @@
 extends RigidBody2D
-class_name Pickable
+#class_name Pickable
 
 @export var item: InvItem
 @export var count := 1

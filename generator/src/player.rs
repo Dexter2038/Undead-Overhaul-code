@@ -45,7 +45,7 @@ pub struct Player {
     #[export]
     anim_player: Option<Gd<AnimationPlayer>>,
 
-    pick_items: Array<Gd<Pickable>>,
+    pub pick_items: Array<Gd<Pickable>>,
 
     #[init(val=State::Idle)]
     state: State,
@@ -76,14 +76,17 @@ impl ICharacterBody2D for Player {
 }
 
 impl Player {
+    #[allow(dead_code)]
     fn sprite(&self) -> &Gd<Sprite2D> {
         self.sprite.as_ref().unwrap()
     }
 
+    #[allow(dead_code)]
     fn sprite_mut(&mut self) -> &mut Gd<Sprite2D> {
         self.sprite.as_mut().unwrap()
     }
 
+    #[allow(dead_code)]
     fn anim_player(&self) -> &Gd<AnimationPlayer> {
         self.anim_player.as_ref().unwrap()
     }
