@@ -3,7 +3,7 @@ use godot::{
     prelude::*,
 };
 
-use crate::{player::Player, resources::inv_item::InvItem};
+use crate::{inventory::item::InventoryItem, player::Player};
 
 #[derive(GodotClass)]
 #[class(init, base=RigidBody2D)]
@@ -17,7 +17,7 @@ pub struct Pickable {
     area: Option<Gd<Area2D>>,
 
     #[export]
-    item: Option<Gd<InvItem>>,
+    item: Option<Gd<InventoryItem>>,
 
     pub quantity: u32,
 }
@@ -76,7 +76,7 @@ impl Pickable {
         self.area.as_mut().unwrap()
     }
 
-    pub fn item(&self) -> &Gd<InvItem> {
+    pub fn item(&self) -> &Gd<InventoryItem> {
         self.item.as_ref().unwrap()
     }
 

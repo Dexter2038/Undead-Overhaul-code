@@ -2,9 +2,9 @@ use godot::prelude::*;
 
 use crate::player::Player;
 
+mod inventory;
 mod pickable;
 mod player;
-mod resources;
 
 #[derive(GodotClass)]
 #[class(base=Node)]

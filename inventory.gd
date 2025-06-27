@@ -1,5 +1,5 @@
 extends CanvasLayer
-class_name Inventory
+#class_name Inventory
 
 signal InvSizeChanged
 
@@ -15,6 +15,6 @@ func _ready() -> void:
 		spawn_point.add_child(inv_item)
 
 
-func add_item(item: InvItem, count: int):
+func add_item(item):#: InvItem, count: int):
 	for inv_item in spawn_point.get_children():
 		print(inv_item)

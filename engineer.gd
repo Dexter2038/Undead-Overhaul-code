@@ -18,8 +18,7 @@ enum Dir {
 enum State {
 	Idle,
 	Move,
-	Jump,
-	Fall
+	Jump
 }
 
 var dir := Dir.Right
@@ -49,8 +48,6 @@ func set_state(new_state: State) -> void:
 			animation_player.play("move")
 		State.Jump:
 			animation_player.play("jump")
-		State.Fall:
-			animation_player.play("fall")
 
 
 func _physics_process(delta: float) -> void:
