@@ -85,7 +85,6 @@ impl Inventory {
                 quantity -= to_add;
             }
         }
-
         if quantity == 0 { Ok(()) } else { Err(quantity) }
     }
 

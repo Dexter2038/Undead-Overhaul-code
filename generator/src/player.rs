@@ -153,11 +153,16 @@ impl Player {
             let pickable_item = pickable_item.bind();
             let item = pickable_item.item();
             let quantity = pickable_item.quantity;
-            let Some(inventory) = self.inventory.as_mut() else {
-                return;
+            let result = {
+                let Some(inventory) = self.inventory.as_mut() else {
+                    return;
+                };
+                let mut inventory = inventory.bind_mut();
+                inventory.add_item(item, quantity)
             };
-            let mut inventory = inventory.bind_mut();
-            let result = inventory.add_item(item, quantity);
+            self.inventory_ui_mut().bind_mut().refresh();
+
+            // If item was successfully added to the inventory
             if result.is_ok() {
                 if let Some(mut pickable_item) = self.pick_items.pop_front() {
                     pickable_item.queue_free();
@@ -168,6 +173,7 @@ impl Player {
                 }
                 return;
             }
+            // If either item was not added to the inventory at all or only partially
             let Some(mut pickable_item) = self.pick_items.front() else {
                 return;
             };

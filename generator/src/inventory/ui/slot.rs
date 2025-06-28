@@ -26,12 +26,14 @@ impl ITextureButton for InventorySlotUI {
         if self.label.is_none() {
             godot_warn!("InventorySlotUI: label is not set");
         }
-        self.add_item(self.item.clone(), self.quantity);
+        self.refresh();
     }
 }
 
 impl InventorySlotUI {
-    fn add_item(&mut self, item: Option<Gd<InventoryItem>>, quantity: u32) {
+    pub fn refresh(&mut self) {
+        let item = self.item.clone();
+        let quantity = self.quantity;
         match item {
             Some(ref item) => {
                 let item = item.bind();
@@ -56,8 +58,6 @@ impl InventorySlotUI {
                 label.set_text("");
             }
         }
-        self.item = item;
-        self.quantity = quantity;
     }
 
     fn texture(&self) -> &Gd<TextureRect> {

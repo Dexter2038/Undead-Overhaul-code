@@ -19,6 +19,7 @@ pub struct Pickable {
     #[export]
     item: Option<Gd<InventoryItem>>,
 
+    #[export]
     pub quantity: u32,
 }
 

@@ -82,6 +82,26 @@ impl IControl for InventoryUI {
 }
 
 impl InventoryUI {
+    pub fn refresh(&mut self) {
+        let slots = self.inventory().bind().get_slots();
+        for (slot, slot_ui) in slots.iter_shared().zip(self.slots.iter_mut()) {
+            let mut slot_ui = slot_ui.bind_mut();
+            let slot = slot.bind();
+            let mut diff = false;
+            if slot_ui.item != slot.item {
+                slot_ui.item = slot.item.clone();
+                diff = true;
+            }
+            if slot_ui.quantity != slot.quantity {
+                slot_ui.quantity = slot.quantity;
+                diff = true;
+            }
+            if diff {
+                slot_ui.refresh();
+            }
+        }
+    }
+
     pub fn toggle(&mut self) {
         let inv_node = self.inventory_node_mut();
         let is_visible = inv_node.is_visible();
