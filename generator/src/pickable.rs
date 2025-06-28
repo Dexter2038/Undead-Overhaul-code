@@ -26,13 +26,13 @@ pub struct Pickable {
 impl IRigidBody2D for Pickable {
     fn ready(&mut self) {
         if self.area.is_none() {
-            panic!("Pickable must have an area");
+            godot_warn!("Pickable must have an area");
         }
         if self.sprite.is_none() {
-            panic!("Pickable must have a sprite");
+            godot_warn!("Pickable must have a sprite");
         }
         if self.item.is_none() {
-            panic!("Pickable must have an item");
+            godot_warn!("Pickable must have an item");
         }
         if self.sprite().get_material().is_none() {
             godot_warn!("Pickable sprite has no material");

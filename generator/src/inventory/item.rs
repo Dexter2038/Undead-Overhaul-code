@@ -9,22 +9,22 @@ pub struct InventoryItem {
     name: StringName,
 
     #[export]
-    icon_path: Option<Gd<Texture2D>>,
+    pub icon_path: Option<Gd<Texture2D>>,
 
     #[export]
-    icon_scale: f32,
+    pub icon_scale: f32,
 
     #[export]
-    icon_offset: Vector2,
+    pub icon_offset: Vector2,
 
     #[export]
     #[init(val = 1)]
-    max_stack: u32,
+    pub max_stack: u32,
 }
 
 impl InventoryItem {
     #[allow(dead_code)]
-    fn icon(&self) -> &Gd<Texture2D> {
+    pub fn icon(&self) -> &Gd<Texture2D> {
         self.icon_path.as_ref().unwrap()
     }
 }

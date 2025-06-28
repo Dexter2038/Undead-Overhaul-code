@@ -1,7 +1,7 @@
 use godot::{
     classes::{
-        AnimationPlayer, CharacterBody2D, ICharacterBody2D, Input, InputEvent, RigidBody2D,
-        Sprite2D,
+        AnimationPlayer, CanvasLayer, CharacterBody2D, ICharacterBody2D, Input, InputEvent,
+        RigidBody2D, Sprite2D,
     },
     global::move_toward,
     prelude::*,
@@ -43,6 +43,9 @@ pub struct Player {
     push_force: f32,
 
     #[export]
+    hud: Option<Gd<CanvasLayer>>,
+
+    #[export]
     sprite: Option<Gd<Sprite2D>>,
 
     #[export]
@@ -51,7 +54,6 @@ pub struct Player {
     #[export]
     inventory: Option<Gd<Inventory>>,
 
-    #[export]
     inventory_ui: Option<Gd<InventoryUI>>,
 
     pub pick_items: Array<Gd<Pickable>>,
@@ -67,17 +69,30 @@ pub struct Player {
 impl ICharacterBody2D for Player {
     fn ready(&mut self) {
         if self.sprite.is_none() {
-            panic!("Sprite node not found");
+            godot_warn!("Sprite node not found");
         };
         if self.anim_player.is_none() {
-            panic!("AnimationPlayer node not found");
+            godot_warn!("AnimationPlayer node not found");
         };
         if self.inventory.is_none() {
-            panic!("Inventory node not found");
+            godot_warn!("Inventory node not found");
         };
-        if self.inventory_ui.is_none() {
-            panic!("InventoryUI node not found");
+        let Some(hud) = self.hud.as_mut() else {
+            godot_warn!("HUD node not found");
+            return;
         };
+        let inventory_ui_scene = load::<PackedScene>("res://scenes/ui/inventory.tscn");
+        let Some(inventory_ui) = inventory_ui_scene.instantiate() else {
+            godot_warn!("Failed to instantiate inventory UI");
+            return;
+        };
+        let mut inventory_ui = inventory_ui.cast::<InventoryUI>();
+        {
+            let mut ui_ref = inventory_ui.bind_mut();
+            ui_ref.inventory = self.inventory.clone();
+        }
+        hud.add_child(&inventory_ui);
+        self.inventory_ui = Some(inventory_ui);
     }
 
     fn input(&mut self, _input: Gd<InputEvent>) {
@@ -117,6 +132,13 @@ impl Player {
         self.anim_player
             .as_mut()
             .expect("anim_player must be initialized in _ready()")
+    }
+
+    #[allow(dead_code)]
+    fn inventory_ui_mut(&mut self) -> &mut Gd<InventoryUI> {
+        self.inventory_ui
+            .as_mut()
+            .expect("inventory must be initialized in _ready()")
     }
 
     fn pick_item(&mut self) {
@@ -162,8 +184,7 @@ impl Player {
                 return;
             };
             let mut inventory_ui = inventory_ui.bind_mut();
-            let is_visible = inventory_ui.base().is_visible();
-            inventory_ui.base_mut().set_visible(!is_visible);
+            inventory_ui.toggle();
         }
     }
 
@@ -215,9 +236,13 @@ impl Player {
                     }
                     let mut obj: Gd<RigidBody2D> = col.cast();
                     let normal = -c.get_normal();
+                    if normal.y.abs() > 0.7 {
+                        continue;
+                    }
                     let impulse =
                         Vector2::new(normal.x * self.push_force, normal.y * self.push_force);
-                    obj.apply_impulse(impulse);
+                    obj.apply_central_impulse_ex().impulse(impulse).done();
+                    //obj.apply_impulse(impulse);
                 }
                 None => continue,
             }

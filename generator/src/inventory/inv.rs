@@ -9,11 +9,11 @@ pub struct Inventory {
 
     #[export]
     #[init(val = 25)]
-    size: u32,
+    pub size: u32,
 
     #[export]
     #[init(val = 3)]
-    hotbar_size: u32,
+    pub hotbar_size: u32,
 
     #[export]
     slots: Array<Gd<InventorySlot>>,
