@@ -18,13 +18,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2ec0a03c8f9c91e3d8eb7ca56dea81c7248c03826dd3f545f33cd22ef275d4d1"
 
 [[package]]
-name = "generator"
-version = "0.1.0"
-dependencies = [
- "godot",
-]
-
-[[package]]
 name = "glam"
 version = "0.30.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -186,6 +179,13 @@ name = "regex-syntax"
 version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2b15c43186be67a4fd63bee50d0303afffcef381492ebe2c5d87f324e1b8815c"
+
+[[package]]
+name = "rust"
+version = "0.1.0"
+dependencies = [
+ "godot",
+]
 
 [[package]]
 name = "unicode-ident"

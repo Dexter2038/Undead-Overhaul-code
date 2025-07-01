@@ -10,6 +10,7 @@ use godot::{
 use crate::{
     inventory::{inv::Inventory, ui::inv::InventoryUI},
     pickable::Pickable,
+    tool::Tool,
 };
 
 #[derive(Clone, Copy, PartialEq)]
@@ -19,10 +20,19 @@ enum State {
     Move,
 }
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 enum Dir {
     Left,
     Right,
+}
+
+impl Dir {
+    fn as_f32(self) -> f32 {
+        match self {
+            Dir::Left => -1.0,
+            Dir::Right => 1.0,
+        }
+    }
 }
 
 #[derive(GodotClass)]
@@ -43,6 +53,9 @@ pub struct Player {
     push_force: f32,
 
     #[export]
+    flipper: Option<Gd<Node2D>>,
+
+    #[export]
     hud: Option<Gd<CanvasLayer>>,
 
     #[export]
@@ -57,6 +70,8 @@ pub struct Player {
     inventory_ui: Option<Gd<InventoryUI>>,
 
     pub pick_items: Array<Gd<Pickable>>,
+
+    tool: Option<Gd<Tool>>,
 
     #[init(val=State::Idle)]
     state: State,
@@ -77,6 +92,9 @@ impl ICharacterBody2D for Player {
         if self.inventory.is_none() {
             godot_warn!("Inventory node not found");
         };
+        if self.flipper.is_none() {
+            godot_warn!("Flipper node not found");
+        }
         let Some(hud) = self.hud.as_mut() else {
             godot_warn!("HUD node not found");
             return;
@@ -100,47 +118,22 @@ impl ICharacterBody2D for Player {
         self.inv_toggle();
     }
 
-    fn physics_process(&mut self, delta: f32) {
+    fn process(&mut self, delta: f32) {
         self.movement(delta);
+        if Input::singleton().is_action_just_pressed("ui_cancel") {
+            match self.tool.as_ref() {
+                Some(_) => {
+                    self.tool = None;
+                }
+                None => {
+                    self.tool = Some(Tool::new_alloc());
+                }
+            }
+        }
     }
 }
 
 impl Player {
-    #[allow(dead_code)]
-    fn sprite(&self) -> &Gd<Sprite2D> {
-        self.sprite
-            .as_ref()
-            .expect("sprite must be initialized in _ready()")
-    }
-
-    #[allow(dead_code)]
-    fn sprite_mut(&mut self) -> &mut Gd<Sprite2D> {
-        self.sprite
-            .as_mut()
-            .expect("sprite must be initialized in _ready()")
-    }
-
-    #[allow(dead_code)]
-    fn anim_player(&self) -> &Gd<AnimationPlayer> {
-        self.anim_player
-            .as_ref()
-            .expect("anim_player must be initialized in _ready()")
-    }
-
-    #[allow(dead_code)]
-    fn anim_player_mut(&mut self) -> &mut Gd<AnimationPlayer> {
-        self.anim_player
-            .as_mut()
-            .expect("anim_player must be initialized in _ready()")
-    }
-
-    #[allow(dead_code)]
-    fn inventory_ui_mut(&mut self) -> &mut Gd<InventoryUI> {
-        self.inventory_ui
-            .as_mut()
-            .expect("inventory must be initialized in _ready()")
-    }
-
     fn pick_item(&mut self) {
         if Input::singleton().is_action_just_pressed("ui_pick") {
             let len = self.pick_items.len();
@@ -203,14 +196,10 @@ impl Player {
             self.set_state(State::Jump)
         } else {
             let direction = input.get_axis("ui_left", "ui_right");
+            self.set_dir(direction);
             let speed = self.speed;
             velocity.x = direction * speed;
             if direction != 0.0 {
-                self.set_dir(if direction > 0.0 {
-                    Dir::Right
-                } else {
-                    Dir::Left
-                });
                 if self.base().is_on_floor() {
                     self.set_state(State::Move);
                 }
@@ -223,8 +212,7 @@ impl Player {
             }
         }
         if !self.base().is_on_floor() {
-            let gravity = self.base().get_gravity();
-            let gravity = Vector2::new(gravity.x * delta, gravity.y * delta);
+            let gravity = self.base().get_gravity() * delta;
             velocity += gravity
         }
         self.base_mut().set_velocity(velocity);
@@ -267,13 +255,75 @@ impl Player {
         }
     }
 
-    fn set_dir(&mut self, dir: Dir) {
+    fn set_dir(&mut self, velocity: f32) {
+        let dir = match self.tool.as_ref() {
+            Some(_) => {
+                let mouse_pos_x = self.base_mut().get_local_mouse_position().x;
+                if mouse_pos_x > 0.0 {
+                    Dir::Right
+                } else if mouse_pos_x < 0.0 {
+                    Dir::Left
+                } else {
+                    return;
+                }
+            }
+            None => {
+                if velocity > 0.0 {
+                    Dir::Right
+                } else if velocity < 0.0 {
+                    Dir::Left
+                } else {
+                    return;
+                }
+            }
+        };
         if self.dir == dir {
             return;
         }
         self.dir = dir;
-        let scale = self.base().get_scale();
-        self.base_mut()
-            .set_scale(Vector2::new(scale.x * -1.0, scale.y))
+        self.flipper_mut()
+            .set_scale(Vector2::new(dir.as_f32(), 1.0));
+    }
+
+    #[allow(dead_code)]
+    fn sprite(&self) -> &Gd<Sprite2D> {
+        self.sprite
+            .as_ref()
+            .expect("sprite must be initialized in _ready()")
+    }
+
+    #[allow(dead_code)]
+    fn sprite_mut(&mut self) -> &mut Gd<Sprite2D> {
+        self.sprite
+            .as_mut()
+            .expect("sprite must be initialized in _ready()")
+    }
+
+    #[allow(dead_code)]
+    fn anim_player(&self) -> &Gd<AnimationPlayer> {
+        self.anim_player
+            .as_ref()
+            .expect("anim_player must be initialized in _ready()")
+    }
+
+    #[allow(dead_code)]
+    fn anim_player_mut(&mut self) -> &mut Gd<AnimationPlayer> {
+        self.anim_player
+            .as_mut()
+            .expect("anim_player must be initialized in _ready()")
+    }
+
+    #[allow(dead_code)]
+    fn inventory_ui_mut(&mut self) -> &mut Gd<InventoryUI> {
+        self.inventory_ui
+            .as_mut()
+            .expect("inventory must be initialized in _ready()")
+    }
+
+    #[allow(dead_code)]
+    fn flipper_mut(&mut self) -> &mut Gd<Node2D> {
+        self.flipper
+            .as_mut()
+            .expect("flipper must be initialized in _ready()")
     }
 }
