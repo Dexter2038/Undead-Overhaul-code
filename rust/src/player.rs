@@ -10,7 +10,6 @@ use godot::{
 use crate::{
     inventory::{inv::Inventory, ui::inv::InventoryUI},
     pickable::Pickable,
-    tool::Tool,
 };
 
 #[derive(Clone, Copy, PartialEq)]
@@ -67,11 +66,10 @@ pub struct Player {
     #[export]
     inventory: Option<Gd<Inventory>>,
 
+    #[var]
     inventory_ui: Option<Gd<InventoryUI>>,
 
     pub pick_items: Array<Gd<Pickable>>,
-
-    tool: Option<Gd<Tool>>,
 
     #[init(val=State::Idle)]
     state: State,
@@ -120,16 +118,6 @@ impl ICharacterBody2D for Player {
 
     fn process(&mut self, delta: f32) {
         self.movement(delta);
-        if Input::singleton().is_action_just_pressed("ui_cancel") {
-            match self.tool.as_ref() {
-                Some(_) => {
-                    self.tool = None;
-                }
-                None => {
-                    self.tool = Some(Tool::new_alloc());
-                }
-            }
-        }
     }
 }
 
@@ -256,25 +244,22 @@ impl Player {
     }
 
     fn set_dir(&mut self, velocity: f32) {
-        let dir = match self.tool.as_ref() {
-            Some(_) => {
-                let mouse_pos_x = self.base_mut().get_local_mouse_position().x;
-                if mouse_pos_x > 0.0 {
-                    Dir::Right
-                } else if mouse_pos_x < 0.0 {
-                    Dir::Left
-                } else {
-                    return;
-                }
+        let dir = if self.base_mut().get("tool").is_nil() {
+            if velocity > 0.0 {
+                Dir::Right
+            } else if velocity < 0.0 {
+                Dir::Left
+            } else {
+                return;
             }
-            None => {
-                if velocity > 0.0 {
-                    Dir::Right
-                } else if velocity < 0.0 {
-                    Dir::Left
-                } else {
-                    return;
-                }
+        } else {
+            let mouse_pos_x = self.base_mut().get_local_mouse_position().x;
+            if mouse_pos_x > 0.0 {
+                Dir::Right
+            } else if mouse_pos_x < 0.0 {
+                Dir::Left
+            } else {
+                return;
             }
         };
         if self.dir == dir {
@@ -311,6 +296,27 @@ impl Player {
         self.anim_player
             .as_mut()
             .expect("anim_player must be initialized in _ready()")
+    }
+
+    #[allow(dead_code)]
+    fn inventory(&self) -> &Gd<Inventory> {
+        self.inventory
+            .as_ref()
+            .expect("inventory must be initialized in _ready()")
+    }
+
+    #[allow(dead_code)]
+    fn inventory_mut(&mut self) -> &mut Gd<Inventory> {
+        self.inventory
+            .as_mut()
+            .expect("inventory must be initialized in _ready()")
+    }
+
+    #[allow(dead_code)]
+    fn inventory_ui(&self) -> &Gd<InventoryUI> {
+        self.inventory_ui
+            .as_ref()
+            .expect("inventory must be initialized in _ready()")
     }
 
     #[allow(dead_code)]

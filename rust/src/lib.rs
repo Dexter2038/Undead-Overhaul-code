@@ -1,9 +1,9 @@
 use godot::prelude::*;
 
-mod inventory;
-mod pickable;
-mod player;
-mod tool;
+//mod drill;
+//mod inventory;
+//mod pickable;
+//mod player;
 
 #[derive(GodotClass)]
 #[class(base=Node)]
