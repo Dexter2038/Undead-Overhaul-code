@@ -1,5 +1,5 @@
 use godot::{
-    classes::{Control, GridContainer, IControl, NinePatchRect},
+    classes::{Control, GridContainer, IControl, NinePatchRect, TextureButton},
     prelude::*,
 };
 
@@ -19,10 +19,17 @@ pub struct InventoryUI {
     #[export]
     hotbar_spawn_point: Option<Gd<GridContainer>>,
 
+    #[var]
     pub inventory: Option<Gd<Inventory>>,
 
     #[init(val = Vec::new())]
     slots: Vec<Gd<InventorySlotUI>>,
+}
+
+#[godot_api]
+impl InventoryUI {
+    #[signal]
+    pub fn slot_clicked(slot: u32);
 }
 
 #[godot_api]
@@ -61,11 +68,23 @@ impl IControl for InventoryUI {
                 return;
             };
             let slot = i.bind();
+            {
+                let slot_ui = scene.to_godot().cast::<TextureButton>();
+                let idx = idx as u32;
+                let self_gd = self.to_gd();
+                let self_gd = self_gd.clone();
+                let func = move || {
+                    // Use the owned Gd (not GdRef)
+                    let mut self_gd = self_gd.clone(); // Clone Gd (reference counted)
+                    self_gd.bind_mut().signals().slot_clicked().emit(idx);
+                };
+
+                slot_ui.signals().pressed().connect(func);
+            }
             let mut slot_ui = scene.cast::<InventorySlotUI>();
             {
                 let mut slot_ui = slot_ui.bind_mut();
                 slot_ui.item = slot.item.clone();
-
                 slot_ui.quantity = slot.quantity;
             }
             if idx < hotbar_size {
@@ -120,7 +139,7 @@ impl InventoryUI {
             .expect("InventoryUI: inventory node is not set")
     }
 
-    fn inventory(&self) -> &Gd<Inventory> {
+    pub fn inventory(&self) -> &Gd<Inventory> {
         self.inventory
             .as_ref()
             .expect("InventoryUI: inventory is not set")

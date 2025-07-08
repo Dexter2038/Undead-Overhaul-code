@@ -1,6 +1,6 @@
 use godot::{classes::Texture2D, prelude::*};
 
-#[derive(GodotClass)]
+#[derive(GodotClass, Debug)]
 #[class(init, base=Resource)]
 pub struct InventoryItem {
     base: Base<Resource>,
@@ -20,6 +20,12 @@ pub struct InventoryItem {
     #[export]
     #[init(val = 1)]
     pub max_stack: u32,
+
+    #[export]
+    pub equippable: bool,
+
+    #[export]
+    pub equip_path: Option<Gd<PackedScene>>,
 }
 
 impl InventoryItem {
