@@ -2,6 +2,7 @@ use godot::prelude::*;
 
 mod drill;
 mod inventory;
+mod map;
 mod pickable;
 mod player;
 
