@@ -7,4 +7,5 @@ edition = "2024"
 crate-type = ["cdylib"] # Compile this crate to a dynamic C library.
 
 [dependencies]
+bincode = { version = "2.0.1", features = ["serde"] }
 godot = "0.3.1"
